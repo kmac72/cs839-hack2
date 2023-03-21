@@ -15,6 +15,8 @@ bool changeState = false;
 int potent_value;
 int prev_state = LOW;
 
+unsigned long prev_timestamp;
+
 void setup() {
 
   Serial.begin(9600);
@@ -30,6 +32,8 @@ void setup() {
     }
     Serial.println("");
     Serial.println("WiFi connected"); 
+
+    prev_timestamp = millis();
 }
 
 void loop() {
@@ -65,5 +69,22 @@ void loop() {
     digitalWrite(LED_PIN, LOW);
 
     prev_state = LOW;
+  }
+
+  unsigned long curr_timestamp = millis();
+  if(curr_timestamp - prev_timestamp > 600000) {
+
+    // 10 minutes elapsed, trigger log to spreadsheet
+
+    // String url = "http://maker.ifttt.com/trigger/.../with/key/...";
+    // Serial.println("Logging data to spreadsheet");
+    // HTTPClient http;
+    // http.begin(client, url);
+    // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    // int httpResponseCode = http.POST("value1=Fridge");
+    // Serial.println(httpResponseCode);
+    // http.end();
+
+    prev_timestamp = millis();
   }
 }
