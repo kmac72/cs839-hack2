@@ -40,6 +40,7 @@ void loop() {
   
   int pressure_state = digitalRead(PRESSURE_PIN);
   int door_state = digitalRead(DOOR_PIN);
+  int user_tag = 1;
 
   int potent_value = analogRead(POTENT_PIN);
   // Serial.print("Potent angle ");
@@ -81,7 +82,8 @@ void loop() {
     // HTTPClient http;
     // http.begin(client, url);
     // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    // int httpResponseCode = http.POST("value1=Fridge");
+      String values = String("value1=" + String(user_tag) + "&value2=" + String(door_state) + "&value3=" + String(pressure_state));
+    // int httpResponseCode = http.POST(values);
     // Serial.println(httpResponseCode);
     // http.end();
 
