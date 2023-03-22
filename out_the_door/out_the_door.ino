@@ -77,15 +77,15 @@ void loop() {
 
     // 10 minutes elapsed, trigger log to spreadsheet
 
-    // String url = "http://maker.ifttt.com/trigger/.../with/key/...";
-    // Serial.println("Logging data to spreadsheet");
-    // HTTPClient http;
-    // http.begin(client, url);
-    // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-      String values = String("value1=" + String(user_tag) + "&value2=" + String(door_state) + "&value3=" + String(pressure_state));
-    // int httpResponseCode = http.POST(values);
-    // Serial.println(httpResponseCode);
-    // http.end();
+    String url = "http://maker.ifttt.com/trigger/UserData/with/key/b_qtMpsjjEK1WKy0oyDfu5";
+    Serial.println("Logging data to spreadsheet");
+    HTTPClient http;
+    http.begin(client, url);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    String values = String("value1=" + String(user_tag) + "&value2=" + String(door_state) + "&value3=" + String(pressure_state));
+    int httpResponseCode = http.POST(values);
+    Serial.println(httpResponseCode);
+    http.end();
 
     prev_timestamp = millis();
   }
