@@ -5,15 +5,20 @@
 #define DOOR_PIN 27
 #define LED_PIN 12
 #define POTENT_PIN 32
+#define TAG_PIN 13
 
 const char* ssid = "redacted";
 const char* password = "redacted";
 
 WiFiClient client;
-bool changeState = false;
 
-int potent_value;
-int prev_state = LOW;
+bool text_sent = false;
+int user_tag = 1;
+
+int pressure_state;
+int door_state;
+int tag_prev;
+int tag_state = LOW;
 
 unsigned long prev_timestamp;
 
@@ -23,6 +28,8 @@ void setup() {
 
   pinMode(PRESSURE_PIN, INPUT_PULLUP);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(TAG_PIN, INPUT_PULLUP);
+  tag_state = digitalRead(TAG_PIN);
 
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
@@ -36,13 +43,39 @@ void setup() {
     prev_timestamp = millis();
 }
 
+void log_to_spreadsheet() {
+
+  // String url = "http://maker.ifttt.com/trigger/UserData/with/key/b_qtMpsjjEK1WKy0oyDfu5";
+  // Serial.println("Logging data to spreadsheet");
+  // HTTPClient http;
+  // http.begin(client, url);
+  // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+  // String values = String("value1=" + String(user_tag) + "&value2=" + String(door_state) + "&value3=" + String(pressure_state));
+  // int httpResponseCode = http.POST(values);
+  // Serial.println(httpResponseCode);
+  // http.end();
+}
+
 void loop() {
   
-  int pressure_state = digitalRead(PRESSURE_PIN);
-  int door_state = digitalRead(DOOR_PIN);
-  int user_tag = 1;
-
+  pressure_state = digitalRead(PRESSURE_PIN);
+  door_state = digitalRead(DOOR_PIN);
+  tag_prev = tag_state;
+  tag_state = digitalRead(TAG_PIN);
   int potent_value = analogRead(POTENT_PIN);
+
+  if(tag_state == HIGH && tag_prev == LOW) {
+
+    if(user_tag) {
+      user_tag = 0;
+    } else {
+      user_tag = 1;
+    }
+
+    Serial.print("User tag changed: ");
+    Serial.println(user_tag);
+  }
+
   // Serial.print("Potent angle ");
   // Serial.println(potent_value);
 
@@ -50,43 +83,36 @@ void loop() {
 
     digitalWrite(LED_PIN, HIGH);
 
-    if(door_state == HIGH && prev_state == LOW) {
+    if(!text_sent) {
 
-      // String url = "http://maker.ifttt.com/trigger/fridge_open/with/key/b_qtMpsjjEK1WKy0oyDfu5";      
-      String url = "http://maker.ifttt.com/trigger/out_of_door_notification/with/key/b_qtMpsjjEK1WKy0oyDfu5";
-      Serial.println("Requesting URL");
-      HTTPClient http;
-      http.begin(client, url);
-      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-      int httpResponseCode = http.POST("value1=Fridge");
-      Serial.println(httpResponseCode);
-      http.end();
+      // String url = "http://maker.ifttt.com/trigger/out_of_door_notification/with/key/b_qtMpsjjEK1WKy0oyDfu5";
+      // Serial.println("Requesting URL");
+      // HTTPClient http;
+      // http.begin(client, url);
+      // http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+      // int httpResponseCode = http.POST("value1=Fridge");
+      // Serial.println(httpResponseCode);
+      // http.end();
 
-      prev_state = HIGH;
+      text_sent = true;
+      delay(20);
+      Serial.println("Alert sent");
+      log_to_spreadsheet();
     }
 
   } else {
 
+    text_sent = false;
+    delay(20);
     digitalWrite(LED_PIN, LOW);
-
-    prev_state = LOW;
   }
 
   unsigned long curr_timestamp = millis();
-  if(curr_timestamp - prev_timestamp > 600000) {
+  if(curr_timestamp - prev_timestamp > 10000/*600000*/) {
 
     // 10 minutes elapsed, trigger log to spreadsheet
-
-    String url = "http://maker.ifttt.com/trigger/UserData/with/key/b_qtMpsjjEK1WKy0oyDfu5";
-    Serial.println("Logging data to spreadsheet");
-    HTTPClient http;
-    http.begin(client, url);
-    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    String values = String("value1=" + String(user_tag) + "&value2=" + String(door_state) + "&value3=" + String(pressure_state));
-    int httpResponseCode = http.POST(values);
-    Serial.println(httpResponseCode);
-    http.end();
-
+    Serial.println("Logging to spreadsheet");
+    log_to_spreadsheet();
     prev_timestamp = millis();
   }
 }
